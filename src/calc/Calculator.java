@@ -27,6 +27,13 @@ class Calculator {
             return evalPostfix(postfix);
         }
     }
+    // Check for negativ integer
+    private boolean isNegative(String prev,  String current) {
+        if(current.equals("-") && (prev.equals("") || OPERATORS.contains(prev) || prev.equals("("))){
+            return true;
+        }
+        return false;
+    }
 
     // ------  Evaluate RPN expression -------------------
 
@@ -76,7 +83,16 @@ class Calculator {
     List<String> infix2Postfix(List<String> list) {
         List<String> result = new ArrayList<>();
         List<String> stack = new ArrayList<>();
+        int index = 0;
+        boolean skipNext = false;
+
         for (String ele : list) {
+            if(skipNext){
+                skipNext = false;
+                index++;
+                continue;
+            }
+
             if (ele.equals(")")) {
                 for (int i = stack.size() - 1; i > 0; i--) {
                     if (stack.get(i).equals("(")) {
@@ -87,7 +103,17 @@ class Calculator {
                         stack.remove(stack.get(i));
                     }
                 }
-            } else if (OPERATORS.contains(ele)) {
+            }
+
+            // Check for negative integer
+
+            else if(isNegative( (index == 0) ?  ""  : list.get(index-1) ,ele)){
+                skipNext = true;
+                String negativeN = "-" + list.get(index+1);
+                result.add(negativeN);
+            }
+
+            else if (OPERATORS.contains(ele)) {
                 boolean satisfied = Boolean.FALSE;
                 if (stack.size() > 0 && OPERATORS.contains(stack.get(stack.size() - 1))) {
                     while (!satisfied && stack.size() > 0) {
@@ -118,6 +144,7 @@ class Calculator {
                 }
 
             }
+            index++;
         }
 
         for (int i = 0; i < stack.size(); ) {
@@ -170,9 +197,9 @@ class Calculator {
         int operators = 0;
         int operands = 0;
         int par = 0;
-
+        int index = 0;
         for (String ele : list) {
-            if (OPERATORS.contains(ele) || parentheses.contains(ele) || ele.equals(" ")) {
+            if (!isNegative((index==0) ? "" : list.get(index-1),ele) && (OPERATORS.contains(ele) || parentheses.contains(ele) || ele.equals(" "))) {
                 if (!element.equals("")) {
                     retlist.add(element);
                     element = "";
@@ -188,12 +215,14 @@ class Calculator {
             } else {
                 element += ele;
             }
+            index++;
         }
         if (!element.equals("")) {
             retlist.add(element);
             operands++;
         }
         if (operators < operands - 1 || par % 2 != 0) {
+
             throw new IllegalArgumentException(MISSING_OPERATOR);
         }
         return retlist;
