@@ -22,20 +22,23 @@ class Calculator {
         if (expr.length() == 0) {
             return NaN;
         } else {
-            LinkedList<String> tokens = tokenize(expr);
-            LinkedList<String> postfix = infix2Postfix(tokens);
+            List<String> tokens = tokenize(expr);
+            List<String> postfix = infix2Postfix(tokens);
             return evalPostfix(postfix);
         }
     }
-    // Check for negative integer
+    // Check for negativ integer
     private boolean isNegative(String prev,  String current) {
-        return current.equals("-") && (prev.equals("") || OPERATORS.contains(prev) || prev.equals("("));
+        if(current.equals("-") && (prev.equals("") || OPERATORS.contains(prev) || prev.equals("("))){
+            return true;
+        }
+        return false;
     }
 
     // ------  Evaluate RPN expression -------------------
 
-    double evalPostfix(LinkedList<String> postfix) {
-        LinkedList<String> stack = new LinkedList<>();
+    double evalPostfix(List<String> postfix) {
+        List<String> stack = new ArrayList<>();
         for (String ele : postfix) {
             if (OPERATORS.contains(ele)) {
                 double d1;
@@ -47,8 +50,8 @@ class Calculator {
                     throw new IllegalArgumentException(MISSING_OPERAND);
                 }
                 stack.add(String.valueOf(applyOperator(ele, d1, d2)));
-                stack.remove(stack.get(stack.size() - 2));
-                stack.remove(stack.get(stack.size() - 2));
+                stack.remove(stack.size() - 2);
+                stack.remove(stack.size() - 2);
             } else {
                 stack.add(ele);
             }
@@ -72,15 +75,14 @@ class Calculator {
             case "^":
                 return pow(d2, d1);
         }
-
         throw new RuntimeException(OP_NOT_FOUND);
     }
 
     // ------- Infix 2 Postfix ------------------------
 
-    LinkedList<String> infix2Postfix(LinkedList<String> list) {
-        LinkedList<String> result = new LinkedList<>();
-        LinkedList<String> stack = new LinkedList<>();
+    List<String> infix2Postfix(List<String> list) {
+        List<String> result = new ArrayList<>();
+        List<String> stack = new ArrayList<>();
         int index = 0;
         boolean skipNext = false;
 
@@ -112,22 +114,23 @@ class Calculator {
             }
 
             else if (OPERATORS.contains(ele)) {
-                boolean satisfied = false;
-                if (stack.size() > 0 && OPERATORS.contains(stack.getLast())) {
+                boolean satisfied = Boolean.FALSE;
+                if (stack.size() > 0 && OPERATORS.contains(stack.get(stack.size() - 1))) {
                     while (!satisfied && stack.size() > 0) {
-                        if (stack.getLast().equals("(")) {
+                        if (stack.get(stack.size() - 1).equals("(")) {
                             stack.add(ele);
-                            satisfied = true;
-                        } else if (getPrecedence(stack.getLast()) == getPrecedence(ele) || getPrecedence(stack.getLast()) > getPrecedence(ele)) {
-                            if (getAssociativity(ele) == Assoc.RIGHT && getPrecedence(stack.getLast()) == getPrecedence(ele)) {
+                            satisfied = Boolean.TRUE;
+                        } else if (getPrecedence(stack.get(stack.size() - 1)) == getPrecedence(ele) || getPrecedence(stack.get(stack.size() - 1)) > getPrecedence(ele)) {
+                            if (getAssociativity(ele) == Assoc.RIGHT && getPrecedence(stack.get(stack.size() - 1)) == getPrecedence(ele)) {
                                 stack.add(ele);
-                                satisfied = false;
+                                satisfied = Boolean.TRUE;
                             } else {
-                                result.add(stack.removeLast());
+                                result.add(stack.get(stack.size() - 1));
+                                stack.remove(stack.size() - 1);
                             }
                         } else {
                             stack.add(ele);
-                            satisfied = true;
+                            satisfied = Boolean.TRUE;
                         }
                     }
                     if (stack.size() <= 0) {
@@ -148,10 +151,11 @@ class Calculator {
         }
 
         for (int i = 0; i < stack.size(); ) {
-            if (!stack.getLast().equals("(")) {
-                result.add(stack.removeLast());
+            if (!stack.get(stack.size() - 1).equals("(")) {
+                result.add(stack.get(stack.size() - 1));
+                stack.remove(stack.size() - 1);
             } else {
-                stack.removeLast();
+                stack.remove(stack.size() - 1);
             }
         }
 
@@ -188,10 +192,10 @@ class Calculator {
 
     // ---------- Tokenize -----------------------
 
-    LinkedList<String> tokenize(String expr) {
-        LinkedList<String> list = new LinkedList<>(Arrays.asList(expr.split("")));
-        LinkedList<String> retlist = new LinkedList<>();
-        StringBuilder element = new StringBuilder();
+    List<String> tokenize(String expr) {
+        List<String> list = Arrays.asList(expr.split(""));
+        List<String> retlist = new ArrayList<>();
+        String element = "";
         String parentheses = "()";
         int operators = 0;
         int operands = 0;
@@ -199,9 +203,9 @@ class Calculator {
         int index = 0;
         for (String ele : list) {
             if (!isNegative((index==0) ? "" : list.get(index-1),ele) && (OPERATORS.contains(ele) || parentheses.contains(ele) || ele.equals(" "))) {
-                if (!element.toString().equals("")) {
-                    retlist.add(element.toString());
-                    element = new StringBuilder();
+                if (!element.equals("")) {
+                    retlist.add(element);
+                    element = "";
                     operands++;
                 }
                 if (OPERATORS.contains(ele)) {
@@ -212,12 +216,12 @@ class Calculator {
                     par++;
                 }
             } else {
-                element.append(ele);
+                element += ele;
             }
             index++;
         }
-        if (!element.toString().equals("")) {
-            retlist.add(element.toString());
+        if (!element.equals("")) {
+            retlist.add(element);
             operands++;
         }
         if (operators < operands - 1 || par % 2 != 0) {
