@@ -94,15 +94,7 @@ class Calculator {
             }
 
             if (ele.equals(")")) {
-                for (int i = stack.size() - 1; i > 0; i--) {
-                    if (stack.get(i).equals("(")) {
-                        stack.remove(stack.get(i));
-                        i = 0;
-                    } else {
-                        result.add(stack.get(i));
-                        stack.remove(stack.get(i));
-                    }
-                }
+                infix2postfixRightParantases(result, stack);
             }
 
             // Check for negative integer
@@ -114,25 +106,8 @@ class Calculator {
             }
 
             else if (OPERATORS.contains(ele)) {
-                boolean satisfied = Boolean.FALSE;
                 if (stack.size() > 0 && OPERATORS.contains(stack.get(stack.size() - 1))) {
-                    while (!satisfied && stack.size() > 0) {
-                        if (stack.get(stack.size() - 1).equals("(")) {
-                            stack.add(ele);
-                            satisfied = Boolean.TRUE;
-                        } else if (getPrecedence(stack.get(stack.size() - 1)) == getPrecedence(ele) || getPrecedence(stack.get(stack.size() - 1)) > getPrecedence(ele)) {
-                            if (getAssociativity(ele) == Assoc.RIGHT && getPrecedence(stack.get(stack.size() - 1)) == getPrecedence(ele)) {
-                                stack.add(ele);
-                                satisfied = Boolean.TRUE;
-                            } else {
-                                result.add(stack.get(stack.size() - 1));
-                                stack.remove(stack.size() - 1);
-                            }
-                        } else {
-                            stack.add(ele);
-                            satisfied = Boolean.TRUE;
-                        }
-                    }
+                    infix2postfixOperators(result, stack, ele);
                     if (stack.size() <= 0) {
                         stack.add(ele);
                     }
@@ -160,6 +135,39 @@ class Calculator {
         }
 
         return result;
+    }
+
+    private void infix2postfixRightParantases(List<String> result, List<String> stack) {
+        for (int i = stack.size() - 1; i > 0; i--) {
+            if (stack.get(i).equals("(")) {
+                stack.remove(stack.get(i));
+                i = 0;
+            } else {
+                result.add(stack.get(i));
+                stack.remove(stack.get(i));
+            }
+        }
+    }
+
+    private void infix2postfixOperators(List<String> result, List<String> stack, String ele) {
+        boolean satisfied = Boolean.FALSE;
+        while (!satisfied && stack.size() > 0) {
+            if (stack.get(stack.size() - 1).equals("(")) {
+                stack.add(ele);
+                satisfied = Boolean.TRUE;
+            } else if (getPrecedence(stack.get(stack.size() - 1)) == getPrecedence(ele) || getPrecedence(stack.get(stack.size() - 1)) > getPrecedence(ele)) {
+                if (getAssociativity(ele) == Assoc.RIGHT && getPrecedence(stack.get(stack.size() - 1)) == getPrecedence(ele)) {
+                    stack.add(ele);
+                    satisfied = Boolean.TRUE;
+                } else {
+                    result.add(stack.get(stack.size() - 1));
+                    stack.remove(stack.size() - 1);
+                }
+            } else {
+                stack.add(ele);
+                satisfied = Boolean.TRUE;
+            }
+        }
     }
 
     int getPrecedence(String op) {
