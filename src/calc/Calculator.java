@@ -56,6 +56,11 @@ class Calculator {
                 stack.add(ele);
             }
         }
+
+        if (stack.size() > 1) {
+            throw new IllegalArgumentException(MISSING_OPERATOR);
+        }
+
         return Double.parseDouble(stack.get(0));
     }
 
@@ -205,37 +210,27 @@ class Calculator {
         List<String> retlist = new ArrayList<>();
         String element = "";
         String parentheses = "()";
-        int operators = 0;
-        int operands = 0;
-        int par = 0;
-        int index = 0;
-        for (String ele : list) {
-            if (!isNegative((index==0) ? "" : list.get(index-1),ele) && (OPERATORS.contains(ele) || parentheses.contains(ele) || ele.equals(" "))) {
-                if (!element.equals("")) {
+
+        for (int i = 0; i < list.size(); i++) {
+            String ele = list.get(i);
+            if (!isNegative(i == 0 ? "" : list.get(i - 1), ele) && (OPERATORS.contains(ele) || parentheses.contains(ele) || ele.equals(" "))) {
+                if (!element.isEmpty()) {
                     retlist.add(element);
                     element = "";
-                    operands++;
                 }
-                if (OPERATORS.contains(ele)) {
+
+                if (OPERATORS.contains(ele) || parentheses.contains(ele)) {
                     retlist.add(ele);
-                    operators++;
-                } else if (parentheses.contains(ele)) {
-                    retlist.add(ele);
-                    par++;
                 }
-            } else {
+            }
+            else {
                 element += ele;
             }
-            index++;
         }
-        if (!element.equals("")) {
+        if (!element.isEmpty()) {
             retlist.add(element);
-            operands++;
         }
-        if (operators < operands - 1 || par % 2 != 0) {
 
-            throw new IllegalArgumentException(MISSING_OPERATOR);
-        }
         return retlist;
     }
 
